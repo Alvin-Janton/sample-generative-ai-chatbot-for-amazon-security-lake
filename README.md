@@ -3,6 +3,10 @@ The project deploys an Amazon Bedrock Agent and it's foundational infrastructure
 
 By utilizing Bedrock's generative artificial intelligence capabilities to generate code and queries from natural language input, you will be able quickly utilize SageMaker's capabilities to explore and derive machine learning insights from your Security Lake data. By using all these AWS services together, you can identify different areas of interest to focus on and increase your overall security posture. 
 
+## Link to Blog
+
+[AWS Security Lake + Bedrock chat agent](https://aws.amazon.com/blogs/security/use-an-amazon-bedrock-powered-chatbot-with-amazon-security-lake-to-help-investigate-incidents/)
+
 ## **Prerequisites**
 
 1. [Enable Amazon Security Lake](https://docs.aws.amazon.com/security-lake/latest/userguide/getting-started.html). For multiple AWS accounts, it is recommended to manage [Security Lake for AWS Organizations](https://docs.aws.amazon.com/security-lake/latest/userguide/multi-account-management.html) To help automate and streamline the management of multiple accounts, we strongly recommend that you integrate Security Lake with AWS Organizations.
