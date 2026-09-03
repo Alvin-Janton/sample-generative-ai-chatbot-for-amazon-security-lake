@@ -1,386 +1,137 @@
 {
   "table_name": "amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_sh_findings_2_0",
-  "description": "The amazon_security_lake_table_us_east_1_sh_findings_2_0 is an external table that stores Security Hub findings from Amazon Web Services (AWS) for security analysis and monitoring purposes.",
+  "database_name": "amazon_security_lake_glue_db_us_east_1",
+  "table_name_only": "amazon_security_lake_table_us_east_1_sh_findings_2_0",
+  "description": "Glue Data Catalog schema for amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_sh_findings_2_0.",
+  "generated_from": "aws_glue_get_table",
+  "generated_at_utc": "2026-09-03T22:37:27+00:00",
+  "table_type": "EXTERNAL_TABLE",
   "columns": [
     {
       "name": "metadata",
-      "type": "struct",
-      "description": "Metadata information about the security finding",
-      "fields": [
-        {"name": "log_version", "type": "string"},
-        {"name": "product", "type": "struct", "fields": [
-          {"name": "feature", "type": "struct", "fields": [
-            {"name": "uid", "type": "string"},
-            {"name": "name", "type": "string"}
-          ]},
-          {"name": "uid", "type": "string"},
-          {"name": "name", "type": "string"},
-          {"name": "vendor_name", "type": "string"},
-          {"name": "version", "type": "string"}
-        ]},
-        {"name": "processed_time_dt", "type": "timestamp"},
-        {"name": "profiles", "type": "array<string>"},
-        {"name": "version", "type": "string"},
-        {"name": "extensions", "type": "array<struct>", "fields": [
-          {"name": "name", "type": "string"},
-          {"name": "uid", "type": "string"},
-          {"name": "version", "type": "string"}
-        ]}
-      ],
-      "optional": true
+      "type": "struct<log_version:string,product:struct<feature:struct<uid:string,name:string>,uid:string,name:string,vendor_name:string,version:string>,processed_time_dt:timestamp,profiles:array<string>,version:string,extensions:array<struct<name:string,uid:string,version:string>>>"
     },
     {
       "name": "time",
-      "type": "bigint",
-      "description": "Timestamp of the finding",
-      "optional": false
+      "type": "bigint"
     },
     {
       "name": "time_dt",
-      "type": "timestamp",
-      "description": "Datetime of the finding",
-      "optional": true
+      "type": "timestamp"
     },
     {
       "name": "confidence_score",
-      "type": "int",
-      "description": "Confidence score of the finding",
-      "optional": true
+      "type": "int"
     },
     {
       "name": "message",
-      "type": "string",
-      "description": "Message associated with the finding",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "cloud",
-      "type": "struct",
-      "description": "Cloud-related information",
-      "fields": [
-        {"name": "account", "type": "struct", "fields": [
-          {"name": "uid", "type": "string"}
-        ]},
-        {"name": "region", "type": "string"},
-        {"name": "provider", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<account:struct<uid:string>,region:string,provider:string>"
     },
     {
       "name": "resource",
-      "type": "struct",
-      "description": "Resource information",
-      "fields": [
-        {"name": "type", "type": "string"},
-        {"name": "uid", "type": "string"},
-        {"name": "cloud_partition", "type": "string"},
-        {"name": "region", "type": "string"},
-        {"name": "labels", "type": "array<string>"},
-        {"name": "data", "type": "string"},
-        {"name": "criticality", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<type:string,uid:string,cloud_partition:string,region:string,labels:array<string>,data:string,criticality:string>"
     },
     {
       "name": "finding_info",
-      "type": "struct",
-      "description": "Detailed information about the finding",
-      "fields": [
-        {"name": "created_time_dt", "type": "timestamp"},
-        {"name": "uid", "type": "string"},
-        {"name": "desc", "type": "string"},
-        {"name": "title", "type": "string"},
-        {"name": "modified_time_dt", "type": "timestamp"},
-        {"name": "first_seen_time_dt", "type": "timestamp"},
-        {"name": "last_seen_time_dt", "type": "timestamp"},
-        {"name": "related_events", "type": "array<struct>", "fields": [
-          {"name": "product_uid", "type": "string"},
-          {"name": "uid", "type": "string"}
-        ]},
-        {"name": "types", "type": "array<string>"},
-        {"name": "src_url", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<created_time_dt:timestamp,uid:string,desc:string,title:string,modified_time_dt:timestamp,first_seen_time_dt:timestamp,last_seen_time_dt:timestamp,related_events:array<struct<product_uid:string,uid:string>>,types:array<string>,src_url:string>"
     },
     {
       "name": "remediation",
-      "type": "struct",
-      "description": "Remediation information",
-      "fields": [
-        {"name": "desc", "type": "string"},
-        {"name": "references", "type": "array<string>"}
-      ],
-      "optional": true
+      "type": "struct<desc:string,references:array<string>>"
     },
     {
       "name": "compliance",
-      "type": "struct",
-      "description": "Compliance information",
-      "fields": [
-        {"name": "standards", "type": "array<string>"},
-        {"name": "requirements", "type": "array<string>"},
-        {"name": "control", "type": "string"},
-        {"name": "status", "type": "string"},
-        {"name": "status_detail", "type": "string"},
-        {"name": "status_code", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<standards:array<string>,requirements:array<string>,control:string,status:string,status_detail:string,status_code:string>"
     },
     {
       "name": "vulnerabilities",
-      "type": "array<struct>",
-      "description": "Vulnerability information",
-      "fields": [
-        {"name": "remediation", "type": "struct", "fields": [
-          {"name": "desc", "type": "string"},
-          {"name": "references", "type": "array<string>"}
-        ]},
-        {"name": "cve", "type": "struct", "fields": [
-          {"name": "cvss", "type": "array<struct>", "fields": [
-            {"name": "base_score", "type": "decimal(3,1)"},
-            {"name": "vector_string", "type": "string"},
-            {"name": "version", "type": "string"}
-          ]},
-          {"name": "uid", "type": "string"},
-          {"name": "epss", "type": "struct", "fields": [
-            {"name": "score", "type": "string"}
-          ]},
-          {"name": "references", "type": "array<string>"},
-          {"name": "created_time_dt", "type": "timestamp"},
-          {"name": "modified_time_dt", "type": "timestamp"}
-        ]},
-        {"name": "references", "type": "array<string>"},
-        {"name": "related_vulnerabilities", "type": "array<string>"},
-        {"name": "vendor_name", "type": "string"},
-        {"name": "affected_packages", "type": "array<struct>", "fields": [
-          {"name": "architecture", "type": "string"},
-          {"name": "epoch", "type": "int"},
-          {"name": "path", "type": "string"},
-          {"name": "fixed_in_version", "type": "string"},
-          {"name": "name", "type": "string"},
-          {"name": "package_manager", "type": "string"},
-          {"name": "release", "type": "string"},
-          {"name": "remediation", "type": "struct", "fields": [
-            {"name": "desc", "type": "string"}
-          ]},
-          {"name": "version", "type": "string"}
-        ]},
-        {"name": "cwe", "type": "struct", "fields": [
-          {"name": "uid", "type": "string"}
-        ]},
-        {"name": "affected_code", "type": "array<struct>", "fields": [
-          {"name": "end_line", "type": "int"},
-          {"name": "file", "type": "struct", "fields": [
-            {"name": "name", "type": "string"},
-            {"name": "path", "type": "string"},
-            {"name": "uid", "type": "string"},
-            {"name": "type_id", "type": "int"}
-          ]},
-          {"name": "start_line", "type": "int"}
-        ]},
-        {"name": "is_fix_available", "type": "boolean"},
-        {"name": "is_exploit_available", "type": "boolean"}
-      ],
-      "optional": true
+      "type": "array<struct<remediation:struct<desc:string,references:array<string>>,cve:struct<cvss:array<struct<base_score:decimal(3,1),vector_string:string,version:string>>,uid:string,epss:struct<score:string>,references:array<string>,created_time_dt:timestamp,modified_time_dt:timestamp>,references:array<string>,related_vulnerabilities:array<string>,vendor_name:string,affected_packages:array<struct<architecture:string,epoch:int,path:string,fixed_in_version:string,name:string,package_manager:string,release:string,remediation:struct<desc:string>,version:string>>,cwe:struct<uid:string>,affected_code:array<struct<end_line:int,file:struct<name:string,path:string,uid:string,type_id:int>,start_line:int>>,is_fix_available:boolean,is_exploit_available:boolean>>"
     },
     {
       "name": "resources",
-      "type": "array<struct>",
-      "description": "Array of resource information",
-      "fields": [
-        {"name": "type", "type": "string"},
-        {"name": "uid", "type": "string"},
-        {"name": "cloud_partition", "type": "string"},
-        {"name": "region", "type": "string"},
-        {"name": "labels", "type": "array<string>"},
-        {"name": "data", "type": "string"},
-        {"name": "criticality", "type": "string"},
-        {"name": "owner", "type": "struct", "fields": [
-          {"name": "account", "type": "struct", "fields": [
-            {"name": "uid", "type": "string"}
-          ]}
-        ]}
-      ],
-      "optional": true
+      "type": "array<struct<type:string,uid:string,cloud_partition:string,region:string,labels:array<string>,data:string,criticality:string,owner:struct<account:struct<uid:string>>>>"
     },
     {
       "name": "evidences",
-      "type": "array<struct>",
-      "description": "Array of evidence information",
-      "fields": [
-        {"name": "data", "type": "string"},
-        {"name": "actor", "type": "struct", "fields": [
-          {"name": "process", "type": "struct", "fields": [
-            {"name": "created_time_dt", "type": "timestamp"},
-            {"name": "name", "type": "string"},
-            {"name": "pid", "type": "int"},
-            {"name": "uid", "type": "string"},
-            {"name": "user", "type": "struct", "fields": [
-              {"name": "name", "type": "string"},
-              {"name": "uid", "type": "string"}
-            ]},
-            {"name": "cmd_line", "type": "string"},
-            {"name": "parent_process", "type": "struct", "fields": [
-              {"name": "uid", "type": "string"}
-            ]},
-            {"name": "file", "type": "struct", "fields": [
-              {"name": "path", "type": "string"},
-              {"name": "name", "type": "string"},
-              {"name": "type_id", "type": "int"},
-              {"name": "hashes", "type": "array<struct>", "fields": [
-                {"name": "value", "type": "string"},
-                {"name": "algorithm_id", "type": "int"},
-                {"name": "algorithm", "type": "string"}
-              ]}
-            ]},
-            {"name": "euid", "type": "int"}
-          ]},
-          {"name": "api", "type": "struct", "fields": [
-            {"name": "operation", "type": "string"},
-            {"name": "response", "type": "struct", "fields": [
-              {"name": "error", "type": "string"},
-              {"name": "code", "type": "int"}
-            ]},
-            {"name": "service", "type": "struct", "fields": [
-              {"name": "name", "type": "string"}
-            ]}
-          ]},
-          {"name": "src_endpoint", "type": "struct", "fields": [
-            {"name": "ip", "type": "string"},
-            {"name": "location", "type": "struct", "fields": [
-              {"name": "country", "type": "string"},
-              {"name": "city", "type": "string"},
-              {"name": "coordinates", "type": "array<decimal(9,6)>"}
-            ]},
-            {"name": "port", "type": "int"}
-          ]},
-          {"name": "connection_info", "type": "struct", "fields": [
-            {"name": "protocol_name", "type": "string"},
-            {"name": "direction_id", "type": "int"},
-            {"name": "direction", "type": "string"}
-          ]},
-          {"name": "dst_endpoint", "type": "struct", "fields": [
-            {"name": "ip", "type": "string"},
-            {"name": "port", "type": "int"},
-            {"name": "location", "type": "struct", "fields": [
-              {"name": "city", "type": "string"},
-              {"name": "country", "type": "string"},
-              {"name": "coordinates", "type": "array<decimal(9,6)>"}
-            ]}
-          ]},
-          {"name": "query", "type": "struct", "fields": [
-            {"name": "hostname", "type": "string"}
-          ]}
-        ]}
-      ],
-      "optional": true
+      "type": "array<struct<data:string,actor:struct<process:struct<created_time_dt:timestamp,name:string,pid:int,uid:string,user:struct<name:string,uid:string>,cmd_line:string,parent_process:struct<uid:string>,file:struct<path:string,name:string,type_id:int,hashes:array<struct<value:string,algorithm_id:int,algorithm:string>>>,euid:int>>,process:struct<created_time_dt:timestamp,name:string,pid:int,uid:string,user:struct<name:string,uid:string>,cmd_line:string,parent_process:struct<uid:string>,file:struct<path:string,name:string,type_id:int,hashes:array<struct<value:string,algorithm_id:int,algorithm:string>>>,euid:int>,api:struct<operation:string,response:struct<error:string,code:int>,service:struct<name:string>>,src_endpoint:struct<ip:string,location:struct<country:string,city:string,coordinates:array<decimal(9,6)>>,port:int>,connection_info:struct<protocol_name:string,direction_id:int,direction:string>,dst_endpoint:struct<ip:string,port:int,location:struct<city:string,country:string,coordinates:array<decimal(9,6)>>>,query:struct<hostname:string>>>"
     },
     {
       "name": "class_name",
-      "type": "string",
-      "description": "Name of the security finding class",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "class_uid",
-      "type": "int",
-      "description": "Unique identifier of the security finding class",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "category_name",
-      "type": "string",
-      "description": "Name of the security finding category",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "category_uid",
-      "type": "int",
-      "description": "Unique identifier of the security finding category",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "severity_id",
-      "type": "int",
-      "description": "Severity level identifier",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "severity",
-      "type": "string",
-      "description": "Severity level description",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "activity_name",
-      "type": "string",
-      "description": "Name of the activity associated with the finding",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "activity_id",
-      "type": "int",
-      "description": "Unique identifier of the activity",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "type_uid",
-      "type": "bigint",
-      "description": "Unique identifier of the finding type",
-      "optional": false
+      "type": "bigint"
     },
     {
       "name": "type_name",
-      "type": "string",
-      "description": "Name of the finding type",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "status",
-      "type": "string",
-      "description": "Status of the finding",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "unmapped",
-      "type": "map<string,string>",
-      "description": "Additional unmapped fields",
-      "optional": true
+      "type": "map<string,string>"
     },
     {
       "name": "accountid",
-      "type": "string",
-      "description": "Account identifier",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "region",
-      "type": "string",
-      "description": "Region information",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "asl_version",
-      "type": "string",
-      "description": "Version of the Amazon Security Lake",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "observables",
-      "type": "array<struct>",
-      "description": "Array of observable information",
-      "fields": [
-        {"name": "name", "type": "string"},
-        {"name": "value", "type": "string"},
-        {"name": "type", "type": "string"},
-        {"name": "type_id", "type": "int"}
-      ],
-      "optional": true
+      "type": "array<struct<name:string,value:string,type:string,type_id:int>>"
     }
   ],
-  "iceberg_parameters": {
-    "write_format_version": "2",
-    "format-version": "2",
-    "schema_id": "1"
+  "storage": {
+    "Location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/SH_FINDINGS/2.0",
+    "Compressed": false,
+    "NumberOfBuckets": 0
+  },
+  "parameters": {
+    "metadata_location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/SH_FINDINGS/2.0/metadata/00176-8dc29830-9aa3-4dd5-9502-115c9a47d9bd.metadata.json",
+    "previous_metadata_location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/SH_FINDINGS/2.0/metadata/00175-b3e59810-48fc-497b-abd6-0d24885992c0.metadata.json",
+    "table_type": "ICEBERG"
   }
 }

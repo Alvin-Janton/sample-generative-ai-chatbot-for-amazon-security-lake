@@ -1,244 +1,137 @@
 {
   "table_name": "amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_vpc_flow_2_0",
-  "description": "The amazon_security_lake_table_us_east_1_vpc_flow_2_0 is an external table that stores VPC Flow Logs from Amazon Web Services (AWS) for network traffic analysis and monitoring purposes.",
+  "database_name": "amazon_security_lake_glue_db_us_east_1",
+  "table_name_only": "amazon_security_lake_table_us_east_1_vpc_flow_2_0",
+  "description": "Glue Data Catalog schema for amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_vpc_flow_2_0.",
+  "generated_from": "aws_glue_get_table",
+  "generated_at_utc": "2026-09-03T22:37:27+00:00",
+  "table_type": "EXTERNAL_TABLE",
   "columns": [
     {
       "name": "metadata",
-      "type": "struct",
-      "description": "Metadata information about the VPC flow log",
-      "fields": [
-        {"name": "product", "type": "struct", "fields": [
-          {"name": "version", "type": "string"},
-          {"name": "name", "type": "string"},
-          {"name": "feature", "type": "struct", "fields": [
-            {"name": "name", "type": "string"}
-          ]},
-          {"name": "vendor_name", "type": "string"}
-        ]},
-        {"name": "profiles", "type": "array<string>"},
-        {"name": "version", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<product:struct<version:string,name:string,feature:struct<name:string>,vendor_name:string>,profiles:array<string>,version:string>"
     },
     {
       "name": "cloud",
-      "type": "struct",
-      "description": "Cloud-related information",
-      "fields": [
-        {"name": "account", "type": "struct", "fields": [
-          {"name": "uid", "type": "string"}
-        ]},
-        {"name": "region", "type": "string"},
-        {"name": "zone", "type": "string"},
-        {"name": "provider", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<account:struct<uid:string>,region:string,zone:string,provider:string>"
     },
     {
       "name": "src_endpoint",
-      "type": "struct",
-      "description": "Source endpoint information",
-      "fields": [
-        {"name": "port", "type": "int"},
-        {"name": "svc_name", "type": "string"},
-        {"name": "ip", "type": "string"},
-        {"name": "intermediate_ips", "type": "array<string>"},
-        {"name": "interface_uid", "type": "string"},
-        {"name": "vpc_uid", "type": "string"},
-        {"name": "instance_uid", "type": "string"},
-        {"name": "subnet_uid", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<port:int,svc_name:string,ip:string,intermediate_ips:array<string>,interface_uid:string,vpc_uid:string,instance_uid:string,subnet_uid:string>"
     },
     {
       "name": "dst_endpoint",
-      "type": "struct",
-      "description": "Destination endpoint information",
-      "fields": [
-        {"name": "port", "type": "int"},
-        {"name": "svc_name", "type": "string"},
-        {"name": "ip", "type": "string"},
-        {"name": "intermediate_ips", "type": "array<string>"},
-        {"name": "interface_uid", "type": "string"},
-        {"name": "vpc_uid", "type": "string"},
-        {"name": "instance_uid", "type": "string"},
-        {"name": "subnet_uid", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<port:int,svc_name:string,ip:string,intermediate_ips:array<string>,interface_uid:string,vpc_uid:string,instance_uid:string,subnet_uid:string>"
     },
     {
       "name": "connection_info",
-      "type": "struct",
-      "description": "Connection information",
-      "fields": [
-        {"name": "protocol_num", "type": "int"},
-        {"name": "tcp_flags", "type": "int"},
-        {"name": "protocol_ver", "type": "string"},
-        {"name": "boundary_id", "type": "int"},
-        {"name": "boundary", "type": "string"},
-        {"name": "direction_id", "type": "int"},
-        {"name": "direction", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<protocol_num:int,tcp_flags:int,protocol_ver:string,boundary_id:int,boundary:string,direction_id:int,direction:string>"
     },
     {
       "name": "traffic",
-      "type": "struct",
-      "description": "Traffic information",
-      "fields": [
-        {"name": "packets", "type": "bigint"},
-        {"name": "bytes", "type": "bigint"}
-      ],
-      "optional": true
+      "type": "struct<packets:bigint,bytes:bigint>"
     },
     {
       "name": "time",
-      "type": "bigint",
-      "description": "Timestamp of the flow log",
-      "optional": false
+      "type": "bigint"
     },
     {
       "name": "time_dt",
-      "type": "timestamp",
-      "description": "Datetime of the flow log",
-      "optional": true
+      "type": "timestamp"
     },
     {
       "name": "start_time_dt",
-      "type": "timestamp",
-      "description": "Start datetime of the flow log",
-      "optional": true
+      "type": "timestamp"
     },
     {
       "name": "end_time_dt",
-      "type": "timestamp",
-      "description": "End datetime of the flow log",
-      "optional": true
+      "type": "timestamp"
     },
     {
       "name": "status_code",
-      "type": "string",
-      "description": "Status code of the flow log",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "severity_id",
-      "type": "int",
-      "description": "Severity level identifier",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "severity",
-      "type": "string",
-      "description": "Severity level description",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "class_name",
-      "type": "string",
-      "description": "Name of the flow log class",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "class_uid",
-      "type": "int",
-      "description": "Unique identifier of the flow log class",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "category_name",
-      "type": "string",
-      "description": "Name of the flow log category",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "category_uid",
-      "type": "int",
-      "description": "Unique identifier of the flow log category",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "activity_name",
-      "type": "string",
-      "description": "Name of the activity associated with the flow log",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "activity_id",
-      "type": "int",
-      "description": "Unique identifier of the activity",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "action",
-      "type": "string",
-      "description": "Action taken for the flow log",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "action_id",
-      "type": "int",
-      "description": "Unique identifier of the action",
-      "optional": true
+      "type": "int"
     },
     {
       "name": "disposition",
-      "type": "string",
-      "description": "Disposition of the flow log",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "type_uid",
-      "type": "bigint",
-      "description": "Unique identifier of the flow log type",
-      "optional": false
+      "type": "bigint"
     },
     {
       "name": "type_name",
-      "type": "string",
-      "description": "Name of the flow log type",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "accountid",
-      "type": "string",
-      "description": "Account identifier",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "region",
-      "type": "string",
-      "description": "Region information",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "asl_version",
-      "type": "string",
-      "description": "Version of the Amazon Security Lake",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "unmapped",
-      "type": "map<string,string>",
-      "description": "Additional unmapped fields",
-      "optional": true
+      "type": "map<string,string>"
     },
     {
       "name": "observables",
-      "type": "array<struct>",
-      "description": "Array of observable information",
-      "fields": [
-        {"name": "name", "type": "string"},
-        {"name": "value", "type": "string"},
-        {"name": "type", "type": "string"},
-        {"name": "type_id", "type": "int"}
-      ],
-      "optional": true
+      "type": "array<struct<name:string,value:string,type:string,type_id:int>>"
     }
   ],
-  "iceberg_parameters": {
-    "write_format_version": "2",
-    "format-version": "2",
-    "schema_id": "1"
+  "storage": {
+    "Location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/VPC_FLOW/2.0",
+    "Compressed": false,
+    "NumberOfBuckets": 0
+  },
+  "parameters": {
+    "metadata_location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/VPC_FLOW/2.0/metadata/01799-e32adb46-0a1e-4a83-ada3-42658e4b742d.metadata.json",
+    "previous_metadata_location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/VPC_FLOW/2.0/metadata/01798-64c28458-446a-413a-bc4d-707b91351d1f.metadata.json",
+    "table_type": "ICEBERG"
   }
 }

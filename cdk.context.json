@@ -1,0 +1,11 @@
+{
+  "securityLakeRegion": "us-east-1",
+  "securityLakeDatabaseName": "amazon_security_lake_glue_db_us_east_1",
+  "securityLakeTableNames": [
+    "amazon_security_lake_table_us_east_1_eks_audit_2_0",
+    "amazon_security_lake_table_us_east_1_lambda_execution_2_0",
+    "amazon_security_lake_table_us_east_1_route53_2_0",
+    "amazon_security_lake_table_us_east_1_sh_findings_2_0",
+    "amazon_security_lake_table_us_east_1_vpc_flow_2_0" 
+  ]
+}

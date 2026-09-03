@@ -7,6 +7,7 @@ node_modules/
 **/node_modules/
 package-lock.json
 **/package-lock.json
+scripts
 
 # IDE
 .idea/
@@ -55,3 +56,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+lib/bedrock/kb_source_data/runbooks/aws-incident-response-playbooks/playbooks/Amazon GuardDuty Playbooks/EKS Findings/IRP-GD-PrivilegeEscalation-Kubernetes_PrivilegedContainer.md
+lib/bedrock/kb_source_data/runbooks/aws-incident-response-playbooks/playbooks/Amazon GuardDuty Playbooks/EKS Findings/IRP-GD-SuccessfulAnonymousAccess-Kubernetes.md
+lib/bedrock/kb_source_data/runbooks/aws-incident-response-playbooks/playbooks/Amazon GuardDuty Playbooks/IAM Findings/IAMAnomolousBehavior-Impact.md

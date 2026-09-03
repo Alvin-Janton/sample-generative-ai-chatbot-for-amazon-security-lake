@@ -11,14 +11,11 @@ When you query Security Lake data, you must include the name of the Lake Formati
  
 ### Common values for the log source table include the following:
 
-cloud_trail_mgmt_2_0 – AWS CloudTrail management events
 lambda_execution_2_0 – CloudTrail data events for Lambda
-s3_data_2_0 – CloudTrail data events for S3
 route53_2_0 – Amazon Route 53 resolver query logs
 sh_findings_2_0 – AWS Security Hub findings
 vpc_flow_2_0 – Amazon Virtual Private Cloud (Amazon VPC) Flow Logs
 eks_audit_2_0 – Amazon Elastic Kubernetes Service (Amazon EKS) Audit Logs
-waf_2_0 – AWS WAFv2 Logs
 
 #### Example: All Security Hub findings in table sh_findings_2_0 from us-east-1 Region
 SELECT *
@@ -72,24 +69,6 @@ WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '14' DAY AND CURRENT_TIMESTAM
 
 ###### Events occurring on or after a specific date
 WHERE time_dt >= TIMESTAMP '2023-03-01'
-
-
-#### Example: List of all CloudTrail activity from source IP ********* on or after March 1, 2023 in table cloud_trail_mgmt_1_0
-SELECT *
-    FROM amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_cloud_trail_mgmt_1_0
-    WHERE eventDay >= '20230301'
-    AND src_endpoint.ip = '192.0.2.1'
-    ORDER BY time desc
-    LIMIT 25
-
-#### Example: List of all CloudTrail activity from source IP ********* in the last 30 days in table cloud_trail_mgmt_1_0
-SELECT *
-    FROM amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_cloud_trail_mgmt_1_0
-    WHERE eventDay > cast(date_format(current_timestamp - INTERVAL '30' day, '%Y%m%d%H') as varchar) 
-    AND src_endpoint.ip = '192.0.2.1'
-    ORDER BY time desc
-    LIMIT 25
-
 
 #### Querying Security Lake observables
 Observables is a new feature now available in Security Lake 2.0. The observable object is a pivot element that contains related information found in many places in the event. Querying observables allows users to derive high level security insights from across their data sets.
@@ -165,82 +144,6 @@ UNNEST(resources) AS t(resource)
 WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP 
 AND resource.name = 'kube-controller-manager'
 LIMIT 25
-
-
-### Example Security Lake queries for CloudTrail data
-
-AWS CloudTrail tracks user activity and API usage in AWS services. Subscribers can query CloudTrail data to learn the following types of information:
-
-Here are some example queries for CloudTrail data for AWS source version 2:
-
-#### Unauthorized attempts against AWS services in the last 7 days
-SELECT
-    time_dt, 
-    api.service.name, 
-    api.operation, 
-    api.response.error, 
-    api.response.message, 
-    api.response.data, 
-    cloud.region, 
-    actor.user.uid, 
-    src_endpoint.ip, 
-    http_request.user_agent
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_cloud_trail_mgmt_2_0"
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP 
-AND api.response.error in (
-    'Client.UnauthorizedOperation',
-    'Client.InvalidPermission.NotFound',
-    'Client.OperationNotPermitted',
-    'AccessDenied')
-ORDER BY time desc
-LIMIT 25
-
-#### List of all CloudTrail activity from source IP 192.0.2.1 in the last 7 days
-SELECT
-    api.request.uid, 
-    time_dt, 
-    api.service.name, 
-    api.operation, 
-    cloud.region, 
-    actor.user.uid, 
-    src_endpoint.ip, 
-    http_request.user_agent
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_cloud_trail_mgmt_2_0"
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-AND src_endpoint.ip = '192.0.2.1.'
-ORDER BY time desc
-LIMIT 25
-
-#### List of all IAM activity in the last 7 days
-SELECT *
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_cloud_trail_mgmt_2_0"
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-AND api.service.name = 'iam.amazonaws.com'
-ORDER BY time desc
-LIMIT 25
-
-#### Instances where the credential AIDACKCEVSQ6C2EXAMPLE was used in the last 7 days
-SELECT 
-      actor.user.uid, 
-      actor.user.uid_alt, 
-      actor.user.account.uid, 
-      cloud.region
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_cloud_trail_mgmt_2_0"
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-AND actor.user.credential_uid = 'AIDACKCEVSQ6C2EXAMPLE'
-LIMIT 25
-
-#### List of failed CloudTrail records in the last 7 days
-SELECT 
-      actor.user.uid, 
-      actor.user.uid_alt, 
-      actor.user.account.uid, 
-      cloud.region
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_cloud_trail_mgmt_2_0"
-WHERE status='failed' and time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-ORDER BY time DESC
-LIMIT 25
-
 
 ### Example queries for Route 53 resolver query logs
 Amazon Route 53 resolver query logs track DNS queries made by resources within your Amazon VPC. Subscribers can query Route 53 resolver query logs to learn the following types of information:
@@ -373,7 +276,7 @@ LIMIT 25
 
 #### Findings with a Common Vulnerability Scoring System (CVSS) score greater than 1 (no time restriction)
 SELECT
-    DISTINCT finding_info.uid
+    DISTINCT finding_info.uid,
     time_dt,
     metadata,
     finding_info,
@@ -466,7 +369,7 @@ LIMIT 25
 SELECT *
 FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_vpc_flow_2_0"
 WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP 
-AND split_part(src_endpoint.ip,'.', 1)='198'AND split_part(src_endpoint.ip,'.', 2)='51'
+AND split_part(src_endpoint.ip,'.', 1)='198' AND split_part(src_endpoint.ip,'.', 2)='51'
 LIMIT 25
 
 #### All HTTPS traffic in the last 7 days
@@ -511,12 +414,16 @@ SELECT
     traffic.bytes
 FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_vpc_flow_2_0"
 WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP 
-AND(
-    src_endpoint.ip = '192.0.2.1'
-AND dst_endpoint.ip = '192.0.2.2')
-OR (
-    src_endpoint.ip = '192.0.2.2'
-AND dst_endpoint.ip = '192.0.2.1')
+AND (
+    (
+        src_endpoint.ip = '192.0.2.1'
+        AND dst_endpoint.ip = '192.0.2.2'
+    )
+    OR (
+        src_endpoint.ip = '192.0.2.2'
+        AND dst_endpoint.ip = '192.0.2.1'
+    )
+)
 ORDER BY start_time_dt ASC
 LIMIT 25
 
@@ -542,100 +449,3 @@ AND action = 'Denied'
 LIMIT 25
 
 
-### Example Security Lake queries for AWS WAFv2 logs
-
-AWS WAF is a web application firewall that you can use to monitor web requests that your end users send to your applications and to control access to your content.
-
-Here are some examples queries for AWS WAFv2 logs for AWS source version 2:
-
-#### Post requests from a specific source IP over the past 7 days
-SELECT 
-    time_dt,
-    activity_name,
-    src_endpoint.ip,
-    http_request.url.path,
-    http_request.url.hostname,
-    http_request.http_method,
-    http_request.http_headers
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_waf_2_0" 
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-AND src_endpoint.ip = '100.123.123.123'
-AND activity_name = 'Post'
-LIMIT 25
-
-#### Requests which matched a firewall type MANAGED_RULE_GROUP over the past 7 days
-SELECT 
-    time_dt,
-    activity_name,
-    src_endpoint.ip,
-    http_request.url.path,
-    http_request.url.hostname,
-    http_request.http_method,
-    firewall_rule.uid,
-    firewall_rule.type,
-    firewall_rule.condition,
-    firewall_rule.match_location,
-    firewall_rule.match_details,
-    firewall_rule.rate_limit
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_waf_2_0" 
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-AND firewall_rule.type = 'MANAGED_RULE_GROUP'
-LIMIT 25
-
-#### Requests which matched a REGEX in a firewall rule over the past 7 days
-SELECT 
-    time_dt,
-    activity_name,
-    src_endpoint.ip,
-    http_request.url.path,
-    http_request.url.hostname,
-    http_request.http_method,
-    firewall_rule.uid,
-    firewall_rule.type,
-    firewall_rule.condition,
-    firewall_rule.match_location,
-    firewall_rule.match_details,
-    firewall_rule.rate_limit
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_waf_2_0" 
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-AND firewall_rule.condition = 'REGEX'
-LIMIT 25
-
-#### Denied get requests for AWS credentials which triggered AWS WAF rule over the past 7 days
-SELECT 
-    time_dt,
-    activity_name,
-    action,
-    src_endpoint.ip,
-    http_request.url.path,
-    http_request.url.hostname,
-    http_request.http_method,
-    firewall_rule.uid,
-    firewall_rule.type
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_waf_2_0" 
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY AND CURRENT_TIMESTAMP
-AND http_request.url.path = '/.aws/credentials'
-AND action = 'Denied'
-LIMIT 25
-
-#### Get requests for AWS Credentials, grouped by country over the past 7 days
-SELECT count(*) as Total,
-    src_endpoint.location.country AS Country,
-    activity_name,
-    action,
-    src_endpoint.ip,
-    http_request.url.path,
-    http_request.url.hostname,
-    http_request.http_method
-FROM "amazon_security_lake_glue_db_us_east_1"."amazon_security_lake_table_us_east_1_waf_2_0"
-WHERE time_dt BETWEEN CURRENT_TIMESTAMP - INTERVAL '7' DAY
-    AND CURRENT_TIMESTAMP
-    AND activity_name = 'Get'
-    AND http_request.url.path = '/.aws/credentials'
-GROUP BY src_endpoint.location.country,
-    activity_name,
-    action,
-    src_endpoint.ip,
-    http_request.url.path,
-    http_request.url.hostname,
-    http_request.http_method

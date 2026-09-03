@@ -1,286 +1,141 @@
 {
   "table_name": "amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_lambda_execution_2_0",
-  "description": "The amazon_security_lake_table_us_east_1_lambda_execution_2_0 is an external table that stores AWS Lambda execution logs for monitoring and analyzing serverless function executions.",
+  "database_name": "amazon_security_lake_glue_db_us_east_1",
+  "table_name_only": "amazon_security_lake_table_us_east_1_lambda_execution_2_0",
+  "description": "Glue Data Catalog schema for amazon_security_lake_glue_db_us_east_1.amazon_security_lake_table_us_east_1_lambda_execution_2_0.",
+  "generated_from": "aws_glue_get_table",
+  "generated_at_utc": "2026-09-03T22:37:27+00:00",
+  "table_type": "EXTERNAL_TABLE",
   "columns": [
     {
       "name": "metadata",
-      "type": "struct",
-      "description": "Metadata information about the Lambda execution",
-      "fields": [
-        {"name": "product", "type": "struct", "fields": [
-          {"name": "version", "type": "string"},
-          {"name": "name", "type": "string"},
-          {"name": "vendor_name", "type": "string"},
-          {"name": "feature", "type": "struct", "fields": [
-            {"name": "name", "type": "string"}
-          ]}
-        ]},
-        {"name": "event_code", "type": "string"},
-        {"name": "uid", "type": "string"},
-        {"name": "profiles", "type": "array<string>"},
-        {"name": "version", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<product:struct<version:string,name:string,vendor_name:string,feature:struct<name:string>>,event_code:string,uid:string,profiles:array<string>,version:string>"
     },
     {
       "name": "time",
-      "type": "bigint",
-      "description": "Timestamp of the Lambda execution (epoch)",
-      "optional": false
+      "type": "bigint"
     },
     {
       "name": "time_dt",
-      "type": "timestamp",
-      "description": "Datetime of the Lambda execution",
-      "optional": true
+      "type": "timestamp"
     },
     {
       "name": "cloud",
-      "type": "struct",
-      "description": "Cloud-related information",
-      "fields": [
-        {"name": "region", "type": "string"},
-        {"name": "provider", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<region:string,provider:string>"
     },
     {
       "name": "api",
-      "type": "struct",
-      "description": "API call information",
-      "fields": [
-        {"name": "response", "type": "struct", "fields": [
-          {"name": "error", "type": "string"},
-          {"name": "message", "type": "string"},
-          {"name": "data", "type": "string"}
-        ]},
-        {"name": "operation", "type": "string"},
-        {"name": "version", "type": "string"},
-        {"name": "service", "type": "struct", "fields": [
-          {"name": "name", "type": "string"}
-        ]},
-        {"name": "request", "type": "struct", "fields": [
-          {"name": "data", "type": "string"},
-          {"name": "uid", "type": "string"}
-        ]}
-      ],
-      "optional": true
+      "type": "struct<response:struct<error:string,message:string,data:string>,operation:string,version:string,service:struct<name:string>,request:struct<data:string,uid:string>>"
     },
     {
       "name": "dst_endpoint",
-      "type": "struct",
-      "description": "Destination endpoint information",
-      "fields": [
-        {"name": "svc_name", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<svc_name:string>"
     },
     {
       "name": "actor",
-      "type": "struct",
-      "description": "Actor information",
-      "fields": [
-        {"name": "user", "type": "struct", "fields": [
-          {"name": "type", "type": "string"},
-          {"name": "name", "type": "string"},
-          {"name": "uid_alt", "type": "string"},
-          {"name": "uid", "type": "string"},
-          {"name": "account", "type": "struct", "fields": [
-            {"name": "uid", "type": "string"}
-          ]},
-          {"name": "credential_uid", "type": "string"}
-        ]},
-        {"name": "session", "type": "struct", "fields": [
-          {"name": "created_time_dt", "type": "timestamp"},
-          {"name": "is_mfa", "type": "boolean"},
-          {"name": "issuer", "type": "string"}
-        ]},
-        {"name": "invoked_by", "type": "string"},
-        {"name": "idp", "type": "struct", "fields": [
-          {"name": "name", "type": "string"}
-        ]}
-      ],
-      "optional": true
+      "type": "struct<user:struct<type:string,name:string,uid_alt:string,uid:string,account:struct<uid:string>,credential_uid:string>,session:struct<created_time_dt:timestamp,is_mfa:boolean,issuer:string>,invoked_by:string,idp:struct<name:string>>"
     },
     {
       "name": "http_request",
-      "type": "struct",
-      "description": "HTTP request information",
-      "fields": [
-        {"name": "user_agent", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<user_agent:string>"
     },
     {
       "name": "src_endpoint",
-      "type": "struct",
-      "description": "Source endpoint information",
-      "fields": [
-        {"name": "uid", "type": "string"},
-        {"name": "ip", "type": "string"},
-        {"name": "domain", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<uid:string,ip:string,domain:string>"
     },
     {
       "name": "session",
-      "type": "struct",
-      "description": "Session information",
-      "fields": [
-        {"name": "uid", "type": "string"},
-        {"name": "uid_alt", "type": "string"},
-        {"name": "credential_uid", "type": "string"},
-        {"name": "issuer", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<uid:string,uid_alt:string,credential_uid:string,issuer:string>"
     },
     {
       "name": "policy",
-      "type": "struct",
-      "description": "Policy information",
-      "fields": [
-        {"name": "uid", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<uid:string>"
     },
     {
       "name": "resources",
-      "type": "array<struct>",
-      "description": "Resources affected by the Lambda execution",
-      "fields": [
-        {"name": "uid", "type": "string"},
-        {"name": "owner", "type": "struct", "fields": [
-          {"name": "account", "type": "struct", "fields": [
-            {"name": "uid", "type": "string"}
-          ]}
-        ]},
-        {"name": "type", "type": "string"}
-      ],
-      "optional": true
+      "type": "array<struct<uid:string,owner:struct<account:struct<uid:string>>,type:string>>"
     },
     {
       "name": "class_name",
-      "type": "string",
-      "description": "Name of the Lambda execution class",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "class_uid",
-      "type": "int",
-      "description": "Unique identifier of the Lambda execution class",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "category_name",
-      "type": "string",
-      "description": "Name of the Lambda execution category",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "category_uid",
-      "type": "int",
-      "description": "Unique identifier of the Lambda execution category",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "severity_id",
-      "type": "int",
-      "description": "Severity level identifier",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "severity",
-      "type": "string",
-      "description": "Severity level description",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "user",
-      "type": "struct",
-      "description": "User information",
-      "fields": [
-        {"name": "uid_alt", "type": "string"},
-        {"name": "uid", "type": "string"},
-        {"name": "name", "type": "string"}
-      ],
-      "optional": true
+      "type": "struct<uid_alt:string,uid:string,name:string>"
     },
     {
       "name": "activity_name",
-      "type": "string",
-      "description": "Name of the activity associated with the Lambda execution",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "activity_id",
-      "type": "int",
-      "description": "Unique identifier of the activity",
-      "optional": false
+      "type": "int"
     },
     {
       "name": "type_uid",
-      "type": "bigint",
-      "description": "Unique identifier of the Lambda execution type",
-      "optional": false
+      "type": "bigint"
     },
     {
       "name": "type_name",
-      "type": "string",
-      "description": "Name of the Lambda execution type",
-      "optional": false
+      "type": "string"
     },
     {
       "name": "status",
-      "type": "string",
-      "description": "Status of the Lambda execution",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "is_mfa",
-      "type": "boolean",
-      "description": "Indicates if multi-factor authentication was used",
-      "optional": true
+      "type": "boolean"
     },
     {
       "name": "unmapped",
-      "type": "map<string,string>",
-      "description": "Additional unmapped fields",
-      "optional": true
+      "type": "map<string,string>"
     },
     {
       "name": "accountid",
-      "type": "string",
-      "description": "Account identifier",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "region",
-      "type": "string",
-      "description": "Region information",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "asl_version",
-      "type": "string",
-      "description": "Version of the Amazon Security Lake",
-      "optional": true
+      "type": "string"
     },
     {
       "name": "observables",
-      "type": "array<struct>",
-      "description": "Array of observable information",
-      "fields": [
-        {"name": "name", "type": "string"},
-        {"name": "value", "type": "string"},
-        {"name": "type", "type": "string"},
-        {"name": "type_id", "type": "int"}
-      ],
-      "optional": true
+      "type": "array<struct<name:string,value:string,type:string,type_id:int>>"
     }
   ],
-  "iceberg_parameters": {
-    "write_format_version": "2",
-    "format-version": "2",
-    "schema_id": "1"
+  "storage": {
+    "Location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/LAMBDA_EXECUTION/2.0",
+    "Compressed": false,
+    "NumberOfBuckets": 0
+  },
+  "parameters": {
+    "metadata_location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/LAMBDA_EXECUTION/2.0/metadata/02193-536f9c14-19c8-4d74-93ca-3c12332a8548.metadata.json",
+    "previous_metadata_location": "s3://aws-security-data-lake-us-east-1-cnsyjfvmjzhz8kmf9ezmwe8spzzrp9/aws/LAMBDA_EXECUTION/2.0/metadata/02192-96196dd0-c786-4ccc-b366-6e2087f8e110.metadata.json",
+    "table_type": "ICEBERG"
   }
 }
