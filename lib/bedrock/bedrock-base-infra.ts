@@ -24,6 +24,8 @@ export class BedrockBaseInfraStack extends Stack {
   public readonly bedrock_vpc: ec2.Vpc;
   public readonly bedrock_infra_sg: ec2.SecurityGroup;
   public readonly kb_source_s3_bucket: Bucket;
+  public readonly tableSchemaIndexResource: cdk.CustomResource;
+  public readonly runbooksIndexResource: cdk.CustomResource;
   
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -291,6 +293,13 @@ export class BedrockBaseInfraStack extends Stack {
                   'pip',
                   'install',
                   '--no-cache-dir',
+                  '--platform',
+                  'manylinux2014_x86_64',
+                  '--implementation',
+                  'cp',
+                  '--python-version',
+                  '312',
+                  '--only-binary=:all:',
                   '-r',
                   path.join(__dirname, 'vector_index_oss', 'requirements.txt'),
                   '-t',
@@ -421,50 +430,34 @@ export class BedrockBaseInfraStack extends Stack {
     this.genAiSecLakerunbooksOpsc.addDependency(genAiSecLakeOpscAccessPolicy);
 
     // Create a custom resource that uses the Lambda function and invoke it for indexes to be created
-    const createIndexLambdaInovkeTableSchema = new cr.AwsCustomResource(this, 'createIndexLambdaInovkeTableSchema', {
-      onCreate: {
-        physicalResourceId: cr.PhysicalResourceId.of('createIndexLambdaInovkeTableSchema'),
-        service: 'Lambda',
-        action: 'invoke',
-        parameters: {
-          FunctionName: createIndexLambda.functionName,
-          Payload: JSON.stringify({
-            OPENSEARCH_HTTPS_ENDPOINT: this.genAiSecLakeTableSchemaOpsc.attrCollectionEndpoint,
-            INDEX_NAME: 'bedrock-knowledge-base-default-index' //TODO
-          }),
-          InvocationType: 'RequestResponse',
-        },
+    const indexSetupVersion = "2";
+
+    const createIndexProvider = new cr.Provider(this, 'CreateIndexProvider', {
+      onEventHandler: createIndexLambda,
+    });
+
+    this.tableSchemaIndexResource = new cdk.CustomResource(this, 'createIndexLambdaInovkeTableSchema', {
+      serviceToken: createIndexProvider.serviceToken,
+      properties: {
+        OPENSEARCH_HTTPS_ENDPOINT: this.genAiSecLakeTableSchemaOpsc.attrCollectionEndpoint,
+        INDEX_NAME: 'bedrock-knowledge-base-default-index',
+        SETUP_VERSION: indexSetupVersion,
       },
-      policy: cr.AwsCustomResourcePolicy.fromStatements([
-        new iam.PolicyStatement({
-          actions: ['lambda:InvokeFunction'],
-          resources: [createIndexLambda.functionArn],
-        }),
-      ]),
-    });    
+    });
+    this.tableSchemaIndexResource.node.addDependency(this.genAiSecLakeTableSchemaOpsc);
+    this.tableSchemaIndexResource.node.addDependency(genAiSecLakeOpscAccessPolicy);
 
     // Create a custom resource that uses the Lambda function and invoke it for indexes to be created
-    const createIndexLambdaInovkeRunbooks = new cr.AwsCustomResource(this, 'createIndexLambdaInovkeRunbooks', {
-      onCreate: {
-        physicalResourceId: cr.PhysicalResourceId.of('createIndexLambdaInovkeRunbooks'),
-        service: 'Lambda',
-        action: 'invoke',
-        parameters: {
-          FunctionName: createIndexLambda.functionName,
-          Payload: JSON.stringify({
-            OPENSEARCH_HTTPS_ENDPOINT: this.genAiSecLakerunbooksOpsc.attrCollectionEndpoint,
-            INDEX_NAME: 'bedrock-knowledge-base-default-index' 
-          }),
-          InvocationType: 'RequestResponse',
-        }
+    this.runbooksIndexResource = new cdk.CustomResource(this, 'createIndexLambdaInovkeRunbooks', {
+      serviceToken: createIndexProvider.serviceToken,
+      properties: {
+        OPENSEARCH_HTTPS_ENDPOINT: this.genAiSecLakerunbooksOpsc.attrCollectionEndpoint,
+        INDEX_NAME: 'bedrock-knowledge-base-default-index',
+        SETUP_VERSION: indexSetupVersion,
       },
-      policy: cr.AwsCustomResourcePolicy.fromStatements([
-        new iam.PolicyStatement({
-          actions: ['lambda:InvokeFunction'],
-          resources: [createIndexLambda.functionArn],
-        }),
-      ]),
-    });    
+    });
+    this.runbooksIndexResource.node.addDependency(this.genAiSecLakerunbooksOpsc);
+    this.runbooksIndexResource.node.addDependency(genAiSecLakeOpscAccessPolicy);
     
     // Add VPC endpoints for services
     this.bedrock_vpc.addInterfaceEndpoint("kms_endpoint", {

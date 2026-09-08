@@ -39,6 +39,7 @@ export class BedrockAppStack extends Stack {
         },
       },
     });
+    tableSchemaKnowledgeBase.node.addDependency(bedrockBaseInfraStack.tableSchemaIndexResource);
 
     new bedrock.CfnDataSource(this, "genAiSecLakeTableSchemaDataSourceTableSchema", {
       name: "gen_ai_sec_lake_table_schema_data_source",
@@ -104,6 +105,7 @@ export class BedrockAppStack extends Stack {
         },
       },
     });
+    runbooksKnowledgeBase.node.addDependency(bedrockBaseInfraStack.runbooksIndexResource);
 
     new bedrock.CfnDataSource(this, "genAiSecLakeTableSchemaDataSourceRunbooks", {
       name: "gen_ai_sec_lake_runbooks_data_source",

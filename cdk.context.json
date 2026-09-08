@@ -2,6 +2,7 @@
   "securityLakeRegion": "us-east-1",
   "securityLakeDatabaseName": "amazon_security_lake_glue_db_us_east_1",
   "allowedClientIpv4Cidr": "70.226.21.10/32",
+  "allowedClientIpv6Cidr": "2600:1702:8900:aa80:1967:d3a7:b02e:ca92/128",
   "bedrockModelId": "us.anthropic.claude-sonnet-4-6",
   "athenaWorkgroupName": "primary",
   "maxAthenaRows": 100,

@@ -25,6 +25,7 @@ export interface ReactAppProps {
   readonly kmsKey: Key;
   readonly reactAppBucket: IBucket;
   readonly allowedClientIpv4Cidr: string;
+  readonly allowedClientIpv6Cidr?: string;
 }
 
 export class ReactAppDeploy extends Construct {
@@ -35,7 +36,10 @@ export class ReactAppDeploy extends Construct {
     const originAccessControlId = this.addCloudFrontOriginAccessControl();
 
     // Create the CloudFront WebACL
-    const webAcl = this.createCloudFrontWebAcl(props.allowedClientIpv4Cidr);
+    const webAcl = this.createCloudFrontWebAcl(
+      props.allowedClientIpv4Cidr,
+      props.allowedClientIpv6Cidr
+    );
 
     // Create the CloudFront distribution
     const cloudFrontDistribution = this.createCloudFrontDistribution(
@@ -122,13 +126,44 @@ export class ReactAppDeploy extends Construct {
     return distribution;
   }
 
-  private createCloudFrontWebAcl(allowedClientIpv4Cidr: string): CfnWebACL {
-    const allowedClientIpSet = new CfnIPSet(this, "AllowedClientIpSet", {
+  private createCloudFrontWebAcl(
+    allowedClientIpv4Cidr: string,
+    allowedClientIpv6Cidr?: string,
+  ): CfnWebACL {
+    const allowedClientIpv4Set = new CfnIPSet(this, "AllowedClientIpv4Set", {
       addresses: [allowedClientIpv4Cidr],
       ipAddressVersion: "IPV4",
       scope: "CLOUDFRONT",
-      name: "genai-security-lake-cloudfront-allowed-client-ip",
+      name: "genai-security-lake-cloudfront-allowed-client-ipv4",
     });
+
+    const allowedIpStatements: CfnWebACL.StatementProperty[] = [
+      {
+        ipSetReferenceStatement: {
+          arn: allowedClientIpv4Set.attrArn,
+        },
+      },
+    ];
+
+    if (allowedClientIpv6Cidr) {
+      const allowedClientIpv6Set = new CfnIPSet(this, "AllowedClientIpv6Set", {
+        addresses: [allowedClientIpv6Cidr],
+        ipAddressVersion: "IPV6",
+        scope: "CLOUDFRONT",
+        name: "genai-security-lake-cloudfront-allowed-client-ipv6",
+      });
+
+      allowedIpStatements.push({
+        ipSetReferenceStatement: {
+          arn: allowedClientIpv6Set.attrArn,
+        },
+      });
+    }
+
+    const allowedIpStatement: CfnWebACL.StatementProperty =
+      allowedIpStatements.length === 1
+        ? allowedIpStatements[0]
+        : { orStatement: { statements: allowedIpStatements } };
 
     return new CfnWebACL(this, "CloudFrontAcl", {
       defaultAction: {
@@ -150,11 +185,7 @@ export class ReactAppDeploy extends Construct {
           },
           statement: {
             notStatement: {
-              statement: {
-                ipSetReferenceStatement: {
-                  arn: allowedClientIpSet.attrArn,
-                },
-              },
+              statement: allowedIpStatement,
             },
           },
           visibilityConfig: {

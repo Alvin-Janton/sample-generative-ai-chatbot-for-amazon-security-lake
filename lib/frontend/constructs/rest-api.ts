@@ -23,6 +23,7 @@ import { NagSuppressions } from "cdk-nag";
 export interface ApiGatewayProps {
   readonly lambdaFunction: IFunction;
   readonly allowedClientIpv4Cidr: string;
+  readonly allowedClientIpv6Cidr?: string;
 }
 
 export class ApiGateway extends Construct {
@@ -42,7 +43,10 @@ export class ApiGateway extends Construct {
     );
 
     // Create the WebACL
-    const webACL = this.createWebACL(props.allowedClientIpv4Cidr);
+    const webACL = this.createWebACL(
+      props.allowedClientIpv4Cidr,
+      props.allowedClientIpv6Cidr
+    );
 
     // Create the API's deployment and stage
     const devStage = this.createDeploymentAndStage(restApi);
@@ -115,13 +119,44 @@ export class ApiGateway extends Construct {
     return restApi;
   }
 
-  private createWebACL(allowedClientIpv4Cidr: string): CfnWebACL {
-    const allowedClientIpSet = new CfnIPSet(this, "AllowedClientIpSet", {
+  private createWebACL(
+    allowedClientIpv4Cidr: string,
+    allowedClientIpv6Cidr?: string,
+  ): CfnWebACL {
+    const allowedClientIpv4Set = new CfnIPSet(this, "AllowedClientIpv4Set", {
       addresses: [allowedClientIpv4Cidr],
       ipAddressVersion: "IPV4",
       scope: "REGIONAL",
-      name: "genai-security-lake-api-allowed-client-ip",
+      name: "genai-security-lake-api-allowed-client-ipv4",
     });
+
+    const allowedIpStatements: CfnWebACL.StatementProperty[] = [
+      {
+        ipSetReferenceStatement: {
+          arn: allowedClientIpv4Set.attrArn,
+        },
+      },
+    ];
+
+    if (allowedClientIpv6Cidr) {
+      const allowedClientIpv6Set = new CfnIPSet(this, "AllowedClientIpv6Set", {
+        addresses: [allowedClientIpv6Cidr],
+        ipAddressVersion: "IPV6",
+        scope: "REGIONAL",
+        name: "genai-security-lake-api-allowed-client-ipv6",
+      });
+
+      allowedIpStatements.push({
+        ipSetReferenceStatement: {
+          arn: allowedClientIpv6Set.attrArn,
+        },
+      });
+    }
+
+    const allowedIpStatement: CfnWebACL.StatementProperty =
+      allowedIpStatements.length === 1
+        ? allowedIpStatements[0]
+        : { orStatement: { statements: allowedIpStatements } };
 
     return new CfnWebACL(this, "APIAcl", {
       defaultAction: {
@@ -143,11 +178,7 @@ export class ApiGateway extends Construct {
           },
           statement: {
             notStatement: {
-              statement: {
-                ipSetReferenceStatement: {
-                  arn: allowedClientIpSet.attrArn,
-                },
-              },
+              statement: allowedIpStatement,
             },
           },
           visibilityConfig: {

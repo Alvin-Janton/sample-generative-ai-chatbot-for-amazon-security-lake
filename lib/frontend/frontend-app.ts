@@ -16,6 +16,7 @@ export class FrontendAppStack extends Stack {
     Aspects.of(this).add(new AwsSolutionsChecks({ verbose: true }));
 
     const allowedClientIpv4Cidr = this.node.tryGetContext("allowedClientIpv4Cidr") as string;
+    const allowedClientIpv6Cidr = this.node.tryGetContext("allowedClientIpv6Cidr") as string | undefined;
     const securityLakeDatabaseName = this.node.tryGetContext("securityLakeDatabaseName") as string;
     const securityLakeTableNames = this.node.tryGetContext("securityLakeTableNames") as string[];
     const athenaWorkgroupName = this.node.tryGetContext("athenaWorkgroupName") as string;
@@ -42,6 +43,7 @@ export class FrontendAppStack extends Stack {
     const apiGateway = new ApiGateway(this, 'ApiGateway', {
       lambdaFunction: lambdaFunctions.lambdaFunction,
       allowedClientIpv4Cidr,
+      allowedClientIpv6Cidr,
     });
 
     // Create the React app build
@@ -55,6 +57,7 @@ export class FrontendAppStack extends Stack {
       kmsKey: reactAppBuild.kmsKey,
       reactAppBucket: reactAppBuild.reactAppBucket,
       allowedClientIpv4Cidr,
+      allowedClientIpv6Cidr,
     });
 
     NagSuppressions.addStackSuppressions(this, [

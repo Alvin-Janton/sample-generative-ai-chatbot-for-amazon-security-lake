@@ -4,10 +4,32 @@ import boto3
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 import re
+import time
+
+
+def wait_for_index(client, index_name, attempts=24, delay_seconds=5):
+    for attempt in range(1, attempts + 1):
+        if client.indices.exists(index=index_name):
+            print(f"Index is available: {index_name}")
+            return
+
+        print(f"Waiting for index {index_name} to become available. Attempt {attempt}/{attempts}")
+        time.sleep(delay_seconds)
+
+    raise TimeoutError(f"Timed out waiting for index {index_name} to become available")
 
 def lambda_handler(event, context):
-    host_https = event['OPENSEARCH_HTTPS_ENDPOINT']
-    index_name = event['INDEX_NAME']
+    print(f"Received event: {json.dumps(event)}")
+
+    request_type = event.get("RequestType", "Create")
+    props = event.get("ResourceProperties", event)
+    host_https = props['OPENSEARCH_HTTPS_ENDPOINT']
+    index_name = props['INDEX_NAME']
+
+    physical_resource_id = f"{host_https}/{index_name}"
+    if request_type == "Delete":
+        return {"PhysicalResourceId": physical_resource_id}
+
     region = os.environ['AWS_REGION']
 
     host = re.sub(r"https?://", "", host_https)
@@ -47,16 +69,25 @@ def lambda_handler(event, context):
         }
     }
 
+    if client.indices.exists(index=index_name):
+        return {
+            'PhysicalResourceId': physical_resource_id,
+            'Data': {'IndexName': index_name}
+        }
+
     try:
-        response = client.indices.create(index_name, body=index_body)
-        print(f'Index created: {json.dumps(response)}')
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Vector index created successfully')
-        }
+        response = client.indices.create(index=index_name, body=index_body)
+        print(f'Index creation response: {json.dumps(response)}')
     except Exception as e:
-        print(f'Error creating index: {str(e)}')
-        return {
-            'statusCode': 500,
-            'body': json.dumps(f'Error creating vector index: {str(e)}')
-        }
+        if "resource_already_exists_exception" not in str(e):
+            print(f'Error creating index: {str(e)}')
+            raise
+
+        print(f'Index already exists: {index_name}')
+
+    wait_for_index(client, index_name)
+
+    return {
+        'PhysicalResourceId': physical_resource_id,
+        'Data': {'IndexName': index_name}
+    }
