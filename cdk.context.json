@@ -1,11 +1,24 @@
 {
   "securityLakeRegion": "us-east-1",
   "securityLakeDatabaseName": "amazon_security_lake_glue_db_us_east_1",
+  "allowedClientIpv4Cidr": "70.226.21.10/32",
+  "bedrockModelId": "us.anthropic.claude-sonnet-4-6",
+  "athenaWorkgroupName": "primary",
+  "maxAthenaRows": 100,
+  "maxAthenaWaitSeconds": 45,
   "securityLakeTableNames": [
     "amazon_security_lake_table_us_east_1_eks_audit_2_0",
     "amazon_security_lake_table_us_east_1_lambda_execution_2_0",
     "amazon_security_lake_table_us_east_1_route53_2_0",
     "amazon_security_lake_table_us_east_1_sh_findings_2_0",
-    "amazon_security_lake_table_us_east_1_vpc_flow_2_0" 
+    "amazon_security_lake_table_us_east_1_vpc_flow_2_0"
+  ],
+  "availability-zones:account=522814735684:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
   ]
 }

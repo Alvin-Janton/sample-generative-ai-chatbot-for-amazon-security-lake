@@ -6,6 +6,11 @@ import { BedrockAppStack } from '../lib/bedrock/bedrock-kbs-agent';
 import { BedrockBaseInfraStack } from '../lib/bedrock/bedrock-base-infra';
 
 const app = new cdk.App();
+const targetEnv = {
+  account: app.node.tryGetContext("awsAccountId") ?? process.env.CDK_DEFAULT_ACCOUNT,
+  region: app.node.tryGetContext("securityLakeRegion") ?? process.env.CDK_DEFAULT_REGION ?? "us-east-1",
+};
+
 const bedrockBaseInfraStack= new BedrockBaseInfraStack(app, 'BedrockBaseInfraStack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
@@ -13,7 +18,7 @@ const bedrockBaseInfraStack= new BedrockBaseInfraStack(app, 'BedrockBaseInfraSta
 
   /* Uncomment the next line to specialize this stack for the AWS Account
    * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  env: targetEnv,
 
   /* Uncomment the next line if you know exactly what Account and Region you
    * want to deploy the stack to. */
@@ -29,7 +34,7 @@ const bedrockAppStack= new BedrockAppStack(app, 'BedrockAppStack', bedrockBaseIn
 
   /* Uncomment the next line to specialize this stack for the AWS Account
    * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  env: targetEnv,
 
   /* Uncomment the next line if you know exactly what Account and Region you
    * want to deploy the stack to. */
@@ -45,7 +50,7 @@ new FrontendAppStack(app, 'FrontendAppStack', bedrockAppStack, bedrockBaseInfraS
 
   /* Uncomment the next line to specialize this stack for the AWS Account
    * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  env: targetEnv,
 
   /* Uncomment the next line if you know exactly what Account and Region you
    * want to deploy the stack to. */

@@ -1,8 +1,6 @@
 import { Aspects, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from 'constructs';
-import { Key } from "aws-cdk-lib/aws-kms";
 import { LambdaFunctions } from './constructs/lambda';
-import { WebSocketApiGateway } from './constructs/websocket';
 import { ApiGateway } from './constructs/rest-api';
 import { ReactAppBuild } from "./constructs/react-app-build";
 import { ReactAppDeploy } from "./constructs/react-app-deploy";
@@ -17,28 +15,39 @@ export class FrontendAppStack extends Stack {
     // Apply AwsSolutionsChecks
     Aspects.of(this).add(new AwsSolutionsChecks({ verbose: true }));
 
-    // Create the WebSocket API
-    const webSocketApi = new WebSocketApiGateway(this, 'WebSocketApiGateway');
+    const allowedClientIpv4Cidr = this.node.tryGetContext("allowedClientIpv4Cidr") as string;
+    const securityLakeDatabaseName = this.node.tryGetContext("securityLakeDatabaseName") as string;
+    const securityLakeTableNames = this.node.tryGetContext("securityLakeTableNames") as string[];
+    const athenaWorkgroupName = this.node.tryGetContext("athenaWorkgroupName") as string;
+    const bedrockModelId = this.node.tryGetContext("bedrockModelId") as string;
+    const maxAthenaRows = Number(this.node.tryGetContext("maxAthenaRows") ?? 100);
+    const maxAthenaWaitSeconds = Number(this.node.tryGetContext("maxAthenaWaitSeconds") ?? 45);
     
     // Create the Lambda function
     const lambdaFunctions = new LambdaFunctions(this, 'LambdaFunctions', {
-      webSocketCallbackUrl: webSocketApi.webSocketCallbackUrl,
-      webSocketArnForExecuteApi: webSocketApi.webSocketArnForExecuteApi,
-      bedrockAgent: bedrockAppStack.gen_ai_sec_lake_bedrock_agent,
-      bedrockAgentAlias: bedrockAppStack.gen_ai_sec_lake_bedrock_agent_alias,
+      tableSchemaKnowledgeBaseId: bedrockAppStack.tableSchemaKnowledgeBaseId,
+      runbooksKnowledgeBaseId: bedrockAppStack.runbooksKnowledgeBaseId,
       bedrockVpc: bedrockBaseInfraStack.bedrock_vpc,
       bedrockInfraSg: bedrockBaseInfraStack.bedrock_infra_sg,
+      athenaOutputBucket: bedrockBaseInfraStack.kb_source_s3_bucket,
+      securityLakeDatabaseName,
+      securityLakeTableNames,
+      athenaWorkgroupName,
+      bedrockModelId,
+      maxAthenaRows,
+      maxAthenaWaitSeconds,
     });
 
     // Create the API Gateway
     const apiGateway = new ApiGateway(this, 'ApiGateway', {
       lambdaFunction: lambdaFunctions.lambdaFunction,
+      allowedClientIpv4Cidr,
     });
 
     // Create the React app build
     const reactAppBuild = new ReactAppBuild(this, "ReactAppBuild", {
       restApiUrl: apiGateway.restApiUrl,
-      webSocketUrl: webSocketApi.webSocketUrl,
+      webSocketUrl: "",
       apiKeyParameterName: apiGateway.apiKeyParameterName,
     });
 
@@ -46,6 +55,7 @@ export class FrontendAppStack extends Stack {
     new ReactAppDeploy(this, "ReactAppDeploy", {
       kmsKey: reactAppBuild.kmsKey,
       reactAppBucket: reactAppBuild.reactAppBucket,
+      allowedClientIpv4Cidr,
     });
 
     NagSuppressions.addStackSuppressions(this, [

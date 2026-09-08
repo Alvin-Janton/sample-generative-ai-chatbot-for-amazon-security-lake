@@ -169,7 +169,7 @@ export class ReactAppBuild extends Construct {
         },
       }),
       environment: {
-        buildImage: LinuxBuildImage.STANDARD_6_0,
+        buildImage: LinuxBuildImage.STANDARD_7_0,
       },
     });
     project.node.addDependency(reactAppBucket);

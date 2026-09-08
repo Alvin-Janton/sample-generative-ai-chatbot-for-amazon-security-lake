@@ -18,11 +18,13 @@ import {
 } from "aws-cdk-lib/aws-cloudfront";
 import { PolicyStatement, Effect, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Key } from "aws-cdk-lib/aws-kms";
+import { CfnIPSet, CfnWebACL } from "aws-cdk-lib/aws-wafv2";
 import { NagSuppressions } from "cdk-nag";
 
 export interface ReactAppProps {
   readonly kmsKey: Key;
   readonly reactAppBucket: IBucket;
+  readonly allowedClientIpv4Cidr: string;
 }
 
 export class ReactAppDeploy extends Construct {
@@ -32,10 +34,14 @@ export class ReactAppDeploy extends Construct {
     // Create the CloudFront Origin Access Control (OAC)
     const originAccessControlId = this.addCloudFrontOriginAccessControl();
 
+    // Create the CloudFront WebACL
+    const webAcl = this.createCloudFrontWebAcl(props.allowedClientIpv4Cidr);
+
     // Create the CloudFront distribution
     const cloudFrontDistribution = this.createCloudFrontDistribution(
       props.reactAppBucket,
-      originAccessControlId
+      originAccessControlId,
+      webAcl
     );
 
     // Update the KMS key policy to allow use by CloudFront distribution
@@ -50,10 +56,12 @@ export class ReactAppDeploy extends Construct {
 
   private createCloudFrontDistribution(
     reactAppBucket: IBucket,
-    originAccessControlId: string, 
+    originAccessControlId: string,
+    webAcl: CfnWebACL,
   ): Distribution {
     const distribution = new Distribution(this, "CloudFrontDistribution", {
       enabled: true,
+      webAclId: webAcl.attrArn,
       defaultBehavior: {
         cachePolicy: new CachePolicy(this, "DistributionCachePolicy", {
           minTtl: Duration.seconds(0),
@@ -102,10 +110,6 @@ export class ReactAppDeploy extends Construct {
         reason: "Geo restrictions not enforced since this is a demo application",
       },
       {
-        id: "AwsSolutions-CFR2",
-        reason: "WAF not enforced since this is a demo application",
-      },
-      {
         id: "AwsSolutions-CFR3",
         reason: "Access logging not enforced since this is a demo application",
       },
@@ -116,6 +120,69 @@ export class ReactAppDeploy extends Construct {
     ]);
   
     return distribution;
+  }
+
+  private createCloudFrontWebAcl(allowedClientIpv4Cidr: string): CfnWebACL {
+    const allowedClientIpSet = new CfnIPSet(this, "AllowedClientIpSet", {
+      addresses: [allowedClientIpv4Cidr],
+      ipAddressVersion: "IPV4",
+      scope: "CLOUDFRONT",
+      name: "genai-security-lake-cloudfront-allowed-client-ip",
+    });
+
+    return new CfnWebACL(this, "CloudFrontAcl", {
+      defaultAction: {
+        allow: {},
+      },
+      scope: "CLOUDFRONT",
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: "MetricForCloudFrontWebACL",
+        sampledRequestsEnabled: true,
+      },
+      name: "CloudFrontACL",
+      rules: [
+        {
+          name: "BlockNonAllowedClientIp",
+          priority: 0,
+          action: {
+            block: {},
+          },
+          statement: {
+            notStatement: {
+              statement: {
+                ipSetReferenceStatement: {
+                  arn: allowedClientIpSet.attrArn,
+                },
+              },
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: "MetricForCloudFrontWebACL-BlockNonAllowedClientIp",
+            sampledRequestsEnabled: true,
+          },
+        },
+        {
+          name: "CRSRule",
+          priority: 1,
+          statement: {
+            managedRuleGroupStatement: {
+              name: "AWSManagedRulesCommonRuleSet",
+              vendorName: "AWS",
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: "MetricForCloudFrontWebACL-CRS",
+            sampledRequestsEnabled: true,
+          },
+          overrideAction: {
+            none: {},
+          },
+        },
+      ],
+    });
   }
 
   private addCloudFrontOriginAccessControl(): string {

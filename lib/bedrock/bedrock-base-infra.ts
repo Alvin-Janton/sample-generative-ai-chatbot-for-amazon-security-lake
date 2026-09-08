@@ -5,6 +5,8 @@ import { Key } from "aws-cdk-lib/aws-kms";
 import { aws_opensearchserverless as opensearchserverless } from 'aws-cdk-lib';
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
+import * as fs from 'fs';
+import { execFileSync } from 'child_process';
 import { FlowLogDestination, FlowLogTrafficType, Vpc, SubnetType, SecurityGroup, InterfaceVpcEndpointAwsService, CfnEIP, CfnNatGateway, Subnet, RouterType } from "aws-cdk-lib/aws-ec2";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { AwsSolutionsChecks, NagSuppressions } from "cdk-nag";
@@ -275,11 +277,32 @@ export class BedrockBaseInfraStack extends Stack {
     
     // Create a Lambda function to create the OSS vector index
     const createIndexLambda = new lambda.Function(this, 'CreateIndexLambda', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'vector_index_oss.lambda_handler',
       code: lambda.Code.fromAsset(path.join(__dirname, 'vector_index_oss'),{
         bundling: {     
-          image: Runtime.PYTHON_3_9.bundlingImage,
+          image: Runtime.PYTHON_3_12.bundlingImage,
+          local: {
+            tryBundle(outputDir: string): boolean {
+              try {
+                fs.cpSync(path.join(__dirname, 'vector_index_oss'), outputDir, { recursive: true });
+                execFileSync('python', [
+                  '-m',
+                  'pip',
+                  'install',
+                  '--no-cache-dir',
+                  '-r',
+                  path.join(__dirname, 'vector_index_oss', 'requirements.txt'),
+                  '-t',
+                  outputDir,
+                ], { stdio: 'inherit' });
+                return true;
+              } catch (error) {
+                console.warn(`Local Python bundling failed; falling back to Docker. ${error}`);
+                return false;
+              }
+            },
+          },
           command: [
             "bash",
             "-c",
@@ -345,8 +368,6 @@ export class BedrockBaseInfraStack extends Stack {
       }])
     });
 
-    const cdkDeploymentRole = iam.Role.fromRoleName(this, 'CDKDeploymentRole', 'CDKToolkit-Deployment-Role');
-    
     // Create common access policy of data for opensearchcollections for kbs. Scoped down after kbs created.
     const genAiSecLakeOpscAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, 'genAiSecLakeOpscAccessPolicy', {
       name: 'opscap',
@@ -373,7 +394,7 @@ export class BedrockBaseInfraStack extends Stack {
             ]
           }
         ],
-        Principal: [this.bedrock_kbs_role.roleArn, cdkDeploymentRole.roleArn, createIndexLambda.role?.roleArn]
+        Principal: [this.bedrock_kbs_role.roleArn, createIndexLambda.role?.roleArn]
       }])
     });
 

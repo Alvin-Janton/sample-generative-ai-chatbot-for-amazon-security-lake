@@ -10,17 +10,19 @@ import {
   LogGroupLogDestination,
   Method,
   MethodLoggingLevel,
+  ResponseTransferMode,
   RestApi,
   Stage,
 } from "aws-cdk-lib/aws-apigateway";
 import { IFunction } from "aws-cdk-lib/aws-lambda";
 import { LogGroup } from "aws-cdk-lib/aws-logs";
-import { CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
+import { CfnIPSet, CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
 import { ParameterTier, StringParameter } from "aws-cdk-lib/aws-ssm";
 import { NagSuppressions } from "cdk-nag";
 
 export interface ApiGatewayProps {
   readonly lambdaFunction: IFunction;
+  readonly allowedClientIpv4Cidr: string;
 }
 
 export class ApiGateway extends Construct {
@@ -33,20 +35,20 @@ export class ApiGateway extends Construct {
     // Create the REST API
     const restApi = this.createRestApi();
 
+    // Create the API's "message" resource and method
+    const messageMethod = this.createResourceAndMethod(
+      restApi,
+      props.lambdaFunction
+    );
+
     // Create the WebACL
-    const webACL = this.createWebACL();
+    const webACL = this.createWebACL(props.allowedClientIpv4Cidr);
 
     // Create the API's deployment and stage
     const devStage = this.createDeploymentAndStage(restApi);
 
     // Associate the WebACL with the API stage
     this.associateWebACLWithDevStage(devStage, webACL);
-
-    // Create the API's "message" resource and method
-    const messageMethod = this.createResourceAndMethod(
-      restApi,
-      props.lambdaFunction
-    );
 
     // Store the API key in Parameter Store and associate it with the stage
     const { apiKeyParameter, apiKey } =
@@ -113,7 +115,14 @@ export class ApiGateway extends Construct {
     return restApi;
   }
 
-  private createWebACL(): CfnWebACL {
+  private createWebACL(allowedClientIpv4Cidr: string): CfnWebACL {
+    const allowedClientIpSet = new CfnIPSet(this, "AllowedClientIpSet", {
+      addresses: [allowedClientIpv4Cidr],
+      ipAddressVersion: "IPV4",
+      scope: "REGIONAL",
+      name: "genai-security-lake-api-allowed-client-ip",
+    });
+
     return new CfnWebACL(this, "APIAcl", {
       defaultAction: {
         allow: {},
@@ -127,8 +136,29 @@ export class ApiGateway extends Construct {
       name: "RestApiACL",
       rules: [
         {
-          name: "CRSRule",
+          name: "BlockNonAllowedClientIp",
           priority: 0,
+          action: {
+            block: {},
+          },
+          statement: {
+            notStatement: {
+              statement: {
+                ipSetReferenceStatement: {
+                  arn: allowedClientIpSet.attrArn,
+                },
+              },
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: "MetricForWebACLCDK-BlockNonAllowedClientIp",
+            sampledRequestsEnabled: true,
+          },
+        },
+        {
+          name: "CRSRule",
+          priority: 1,
           statement: {
             managedRuleGroupStatement: {
               name: "AWSManagedRulesCommonRuleSet",
@@ -188,32 +218,11 @@ export class ApiGateway extends Construct {
     const method = resource.addMethod(
       "POST",
       new LambdaIntegration(lambdaFunction, {
-        proxy: false,
-        requestParameters: {
-          "integration.request.header.X-Amz-Invocation-Type": "'Event'",
-        },
-        integrationResponses: [
-          {
-            statusCode: "200",
-            responseParameters: {
-              "method.response.header.Access-Control-Allow-Origin": "'*'",
-            },
-            responseTemplates: {
-              "application/json": "null",
-            },
-          },
-        ],
+        proxy: true,
+        responseTransferMode: ResponseTransferMode.STREAM,
       }),
       {
         apiKeyRequired: true,
-        methodResponses: [
-          {
-            statusCode: "200",
-            responseParameters: {
-              "method.response.header.Access-Control-Allow-Origin": true,
-            },
-          },
-        ],
       }
     );
 
