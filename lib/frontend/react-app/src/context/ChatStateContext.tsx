@@ -1,57 +1,28 @@
-/**
- * The `ChatState` component and its associated hooks provide the state management
- * and functionality for the chat history in the Bedrock Chat application
- *
- * The `ChatStateProvider` is a React context provider that manages the following
- * key pieces of the chat state:
- *
- * - `sessionId`: A unique identifier for the current chat session.
- * - `chatHistory`: An array of chat messages, including both user inputs and
- *   assistant responses.
- * - `invokeModel`: A function that can be used to submit a user query to the
- *   backend and update the chat history accordingly.
- * - `resetChatHistory`: A function that can be used to reset the chat history.
- * - `webSocketStatus`: The current status of the WebSocket connection to the
- *   backend.
- * - `isLoading`: A flag indicating whether the chat is currently waiting for a
- *   response from the backend.
- *
- * The `useChatState` hook can be used by other components to access and interact
- * with the chat state, simplifying the state management and ensuring a consistent
- * user experience throughout the application.
- *
- * @context
- * @example
- * import { ChatStateProvider, useChatState } from './ChatState';
- *
- * const App = () => {
- *   return (
- *     <ChatStateProvider>
- *       <MessageFeed />
- *       <QueryForm />
- *     </ChatStateProvider>
- *   );
- * };
- *
- * const MyComponent = () => {
- *   const { chatHistory, invokeModel } = useChatState();
- *   // Use chatHistory and invokeModel in your component
- * };
- */
 import { v4 as uuidv4 } from "uuid";
-import React, { createContext, useState, useContext, useEffect } from "react";
-import useWebSocketApi from "../hooks/useWebSocketApi";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import ChatMessage from "../types/ChatMessage";
-import WebSocketMessage from "../types/WebSocketMessage";
 
 interface ChatStateValue {
   sessionId: string;
   chatHistory: ChatMessage[];
-  invokeModel: (userInput: string) => void;
+  invokeModel: (userInput: string) => Promise<void>;
   resetChatHistory: () => void;
-  webSocketStatus: string;
+  backendStatus: string;
   isLoading: boolean;
 }
+
+interface StreamEvent {
+  type: "status" | "sql" | "query_result" | "text" | "error" | "done";
+  text?: string;
+  message?: string;
+  sql?: string;
+  rowCount?: number;
+}
+
+const initialAssistantMessage: ChatMessage = {
+  sender: "assistant",
+  text: "Hello! How can I assist you today?",
+};
 
 export const ChatStateContext = createContext<ChatStateValue | undefined>(
   undefined
@@ -62,161 +33,171 @@ export const ChatStateContextProvider: React.FC<{
 }> = ({ children }) => {
   const [sessionId] = useState(uuidv4());
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [timeoutId, setTimeoutId] = useState<ReturnType<
-    typeof setTimeout
-  > | null>(null);
+  const [backendStatus, setBackendStatus] = useState("Ready");
 
   const isLoading = chatHistory.some((message) => message.isLoading);
 
-  // const timeoutDuration = 900000; // 15 minutes
-  // Add the initial greeting message when the context initializes
   useEffect(() => {
-    const initialMessage: ChatMessage = {
-      sender: "assistant",
-      text: "Hello! How can I assist you today?",
-    };
-    setChatHistory([initialMessage]);
+    setChatHistory([initialAssistantMessage]);
   }, []);
 
-  // Handle the timeout when no response was received from the WebSocket/model
-  const handleFailedInvocation = (chatHistory: ChatMessage[], error: string) => {
-    const lastMessageIndex = chatHistory.length - 1;
-    chatHistory[lastMessageIndex].isLoading = false;
-    chatHistory[lastMessageIndex].error = error.toString();
-    setChatHistory([...chatHistory]);
-
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  };
-
-  // Handle new incoming messages from the WebSocket
-  const handleWebSocketMessage = (message: WebSocketMessage) => {
-    const msgJson = JSON.parse(message.data);
-    console.log(`Debug: ${msgJson}`);
-    // END type message
-    if (msgJson.type === "end") {
-      updateChatMessage(msgJson.messageId, "isLoading", false);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    }
-    // ERROR type message
-    else if (msgJson.type === "error") {
-      updateChatMessage(msgJson.messageId, "isLoading", false);
-      updateChatMessage(msgJson.messageId, "error", msgJson.text);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    }
-    // TEXT type message
-    else if (msgJson.type === "text") {
-      updateChatMessage(msgJson.messageId, "text", msgJson.text);
-    }
-    // CITATIONS type message
-    else if (msgJson.type === "citations") {
-      addChatMessageCitations(msgJson.messageId, msgJson.text);
-    }
-  };
-
-  // Use the useWebSocketApi hook
-  const { connectionId, pingWebSocket, webSocketStatus } = useWebSocketApi({
-    // Set the handler function for new messages
-    onMessage: handleWebSocketMessage,
-  });
-
-  // Get API payload for model invocation API call
-  const getInvokeModelPayload = (userQuery: string) => {
-    return {
-      connectionId: connectionId,
-      sessionId: sessionId,
-      messageId: chatHistory.length + 1,
-      userQuery: userQuery,
-    };
-  };
-
-  // Invoke the Bedrock model
   const invokeModel = async (userQuery: string) => {
-    // Load API URL and key from environment
     const apiUrl = import.meta.env.VITE_REST_API_URL;
     const apiKeyValue = import.meta.env.VITE_API_KEY;
-
-    // Add the user's message and a placeholder assistant message to chat history
     const userMsg: ChatMessage = { sender: "user", text: userQuery };
-    const assistantMsg: ChatMessage = { sender: "assistant", text: "", isLoading: true };
-    const updatedHistory = [...chatHistory, userMsg, assistantMsg];
-    setChatHistory([...updatedHistory]);
+    const assistantMsg: ChatMessage = {
+      sender: "assistant",
+      text: "",
+      isLoading: true,
+      status: "Sending request.",
+    };
+    const assistantMessageIndex = chatHistory.length + 1;
 
-    // Create the payload for the API call
-    const payload = getInvokeModelPayload(userQuery);
+    setBackendStatus("Working");
+    setChatHistory((currentHistory) => [...currentHistory, userMsg, assistantMsg]);
 
     try {
-      // Ping to keep WebSocket alive
-      pingWebSocket();
-
-      // Call the API to invoke the Bedrock model. This is an asyncronous
-      // invocation. We simply expect a 200 response from API Gateway. The actual
-      // model response will arrive via the WebSocket connection's onMessage handler.
-      const response = await fetch(apiUrl + "message", {
-        headers: { "x-api-key": apiKeyValue },
-        body: JSON.stringify(payload),
+      const response = await fetch(joinApiPath(apiUrl, "message"), {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKeyValue,
+        },
+        body: JSON.stringify({
+          sessionId,
+          userQuery,
+        }),
         method: "POST",
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        throw new Error(`Request failed with HTTP ${response.status}`);
       }
 
-      // Set a timeout to handle the case where the model does not respond
-      const newTimeoutId = null;
-      // setTimeout(() => {
-      //   handleFailedInvocation(updatedHistory, "Response timeout.");
-      // }, timeoutDuration);
-      setTimeoutId(newTimeoutId);
-    } catch (err) {
-      handleFailedInvocation(updatedHistory, err as string);
+      await readStreamingResponse(response, assistantMessageIndex);
+    } catch (error) {
+      updateChatMessage(assistantMessageIndex, {
+        isLoading: false,
+        status: undefined,
+        error: error instanceof Error ? error.message : "Unexpected request failure.",
+      });
+      setBackendStatus("Error");
     }
   };
 
-  // Reset the chat history
   const resetChatHistory = () => {
-    const initialMessage: ChatMessage = {
-      sender: "assistant",
-      text: "Hello! How can I assist you today?",
-    };
-    setChatHistory([initialMessage]);
-  }
-
-  // Update a chat message at a given index
-  const updateChatMessage = (
-    index: number,
-    property: string,
-    value: string | boolean | null
-  ) => {
-    setChatHistory((prevChatHistory) => {
-      const updatedMessage = {
-        ...prevChatHistory[index],
-        [property]:
-          property === "text" ? prevChatHistory[index].text + value : value,
-      };
-      return [
-        ...prevChatHistory.slice(0, index),
-        updatedMessage,
-        ...prevChatHistory.slice(index + 1),
-      ];
-    });
+    setBackendStatus("Ready");
+    setChatHistory([initialAssistantMessage]);
   };
 
-  // Add citations to a chat message at a given index
-  const addChatMessageCitations = (
+  const readStreamingResponse = async (
+    response: Response,
+    assistantMessageIndex: number
+  ) => {
+    if (!response.body) {
+      throw new Error("Streaming response body was empty.");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let bufferedText = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+
+      bufferedText += decoder.decode(value, { stream: true });
+      const lines = bufferedText.split("\n");
+      bufferedText = lines.pop() ?? "";
+
+      for (const line of lines) {
+        handleStreamLine(line, assistantMessageIndex);
+      }
+    }
+
+    bufferedText += decoder.decode();
+    if (bufferedText.trim()) {
+      handleStreamLine(bufferedText, assistantMessageIndex);
+    }
+  };
+
+  const handleStreamLine = (line: string, assistantMessageIndex: number) => {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) {
+      return;
+    }
+
+    const event = JSON.parse(trimmedLine) as StreamEvent;
+
+    if (event.type === "status") {
+      updateChatMessage(assistantMessageIndex, { status: event.message });
+      return;
+    }
+
+    if (event.type === "sql" && event.sql) {
+      updateChatMessage(assistantMessageIndex, {
+        status: "Running Athena query.",
+        text: `\`\`\`sql\n${event.sql}\n\`\`\`\n\n`,
+      }, true);
+      return;
+    }
+
+    if (event.type === "query_result") {
+      updateChatMessage(assistantMessageIndex, {
+        status: `Received ${event.rowCount ?? 0} Athena row(s).`,
+      });
+      return;
+    }
+
+    if (event.type === "text" && event.text) {
+      updateChatMessage(assistantMessageIndex, {
+        text: event.text,
+        status: undefined,
+      }, true);
+      return;
+    }
+
+    if (event.type === "error") {
+      updateChatMessage(assistantMessageIndex, {
+        isLoading: false,
+        status: undefined,
+        error: event.message ?? event.text ?? "The backend returned an error.",
+      });
+      setBackendStatus("Error");
+      return;
+    }
+
+    if (event.type === "done") {
+      updateChatMessage(assistantMessageIndex, {
+        isLoading: false,
+        status: undefined,
+      });
+      setBackendStatus("Ready");
+    }
+  };
+
+  const updateChatMessage = (
     index: number,
-    citations: string
+    patch: Partial<ChatMessage>,
+    appendText = false
   ) => {
     setChatHistory((prevChatHistory) => {
+      const existingMessage = prevChatHistory[index];
+      if (!existingMessage) {
+        return prevChatHistory;
+      }
+
+      const nextText = appendText && patch.text
+        ? existingMessage.text + patch.text
+        : patch.text ?? existingMessage.text;
+
       const updatedMessage = {
-        ...prevChatHistory[index],
-        citations: citations.split(','),
+        ...existingMessage,
+        ...patch,
+        text: nextText,
       };
+
       return [
         ...prevChatHistory.slice(0, index),
         updatedMessage,
@@ -230,15 +211,20 @@ export const ChatStateContextProvider: React.FC<{
       value={{
         sessionId,
         chatHistory,
-        invokeModel: invokeModel,
+        invokeModel,
         resetChatHistory,
-        webSocketStatus,
+        backendStatus,
         isLoading,
       }}
     >
       {children}
     </ChatStateContext.Provider>
   );
+};
+
+const joinApiPath = (baseUrl: string, path: string) => {
+  const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  return new URL(path, normalizedBaseUrl).toString();
 };
 
 // eslint-disable-next-line react-refresh/only-export-components

@@ -6,9 +6,7 @@
  * to submit the query. It uses the `useChatState` hook to access the `invokeModel`
  * function, which is used to send the user's input to the backend for processing.
  *
- * The component also disables the "Send" button if the WebSocket connection is not
- * in the "Open" state, preventing users from submitting queries when the connection
- * is not available.
+ * The component disables the "Send" button while a response is being generated.
  *
  * @component
  * @example
@@ -40,7 +38,6 @@ const QueryForm: React.FC = () => {
     invokeModel,
     isLoading,
     resetChatHistory,
-    webSocketStatus,
   } = useChatState();
 
   // Handle "enter" key on text input
@@ -81,7 +78,7 @@ const QueryForm: React.FC = () => {
           placeholder="Enter your question or query (Shift-Enter for new line)"
           ariaLabel="Enter your question or query"
           ariaRequired={true}
-          disabled={webSocketStatus !== "Open" || isLoading}
+          disabled={isLoading}
         />
         <Box>
           <span style={{ float: "left" }}>
@@ -89,7 +86,6 @@ const QueryForm: React.FC = () => {
               variant="normal"
               onClick={(resetChatHistory)}
               disabled={
-                webSocketStatus !== "Open" ||
                 isLoading ||
                 chatHistory.length <= 1
               }
@@ -102,7 +98,7 @@ const QueryForm: React.FC = () => {
             <Button
               variant="primary"
               onClick={handleSubmit}
-              disabled={!userInput || webSocketStatus !== "Open" || isLoading}
+              disabled={!userInput || isLoading}
               ariaLabel="Send query"
             >
               Send

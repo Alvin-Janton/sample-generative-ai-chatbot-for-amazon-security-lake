@@ -20,7 +20,6 @@ import { NagSuppressions } from "cdk-nag";
 
 export interface ReactAppProps {
   readonly restApiUrl: string;
-  readonly webSocketUrl: string;
   readonly apiKeyParameterName: string;
 }
 
@@ -34,7 +33,6 @@ export class ReactAppBuild extends Construct {
     // Define the environment variables to be passed into the React app
     const reactEnvironmentVariables: Record<string, string> = {
       VITE_REST_API_URL: props.restApiUrl,
-      VITE_WEBSOCKET_URL: props.webSocketUrl,
       VITE_API_KEY: props.apiKeyParameterName, // CodeBuild will inject the value from Parameter Store
     };
 

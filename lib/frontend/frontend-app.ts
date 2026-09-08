@@ -47,7 +47,6 @@ export class FrontendAppStack extends Stack {
     // Create the React app build
     const reactAppBuild = new ReactAppBuild(this, "ReactAppBuild", {
       restApiUrl: apiGateway.restApiUrl,
-      webSocketUrl: "",
       apiKeyParameterName: apiGateway.apiKeyParameterName,
     });
 

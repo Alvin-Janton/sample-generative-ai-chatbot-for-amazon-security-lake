@@ -23,6 +23,7 @@ interface ChatMessage {
   citations?: string[];
   isLoading?: boolean;
   error?: string;
+  status?: string;
 }
 
 export default ChatMessage;

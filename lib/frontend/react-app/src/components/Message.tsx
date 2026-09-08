@@ -53,7 +53,7 @@ const getSyntaxHighlighter = (language: string) => {
 
 
 const Message: React.FC<{message: ChatMessage}> = ({ message }) => {
-  const { sender, text, citations, isLoading, error } = message;
+  const { sender, text, citations, isLoading, error, status } = message;
 
   const isAssistant = sender === "assistant";
   const extractCitationFilename = (s3Url: string) => {
@@ -145,6 +145,11 @@ const Message: React.FC<{message: ChatMessage}> = ({ message }) => {
             )}
 
             {error && <StatusIndicator type="error">{error}</StatusIndicator>}
+            {!error && status && (
+              <StatusIndicator type={isLoading ? "loading" : "info"}>
+                {status}
+              </StatusIndicator>
+            )}
           </div>
         )}
       </div>
