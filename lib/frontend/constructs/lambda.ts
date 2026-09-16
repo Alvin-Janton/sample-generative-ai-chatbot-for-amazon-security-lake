@@ -110,6 +110,7 @@ export class LambdaFunctions extends Construct {
     role.addToPolicy(new iam.PolicyStatement({
       actions: [
         "glue:GetDatabase",
+        "glue:GetDatabases",
         "glue:GetTable",
         "glue:GetTables",
         "glue:GetPartition",

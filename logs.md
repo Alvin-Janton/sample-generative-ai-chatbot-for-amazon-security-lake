@@ -24,3 +24,10 @@
 - Files changed: `lib/frontend/frontend-app.ts`, `lib/frontend/constructs/react-app-deploy.ts`, `lib/frontend/constructs/rest-api.ts`.
 - Key changes: Added optional `allowedClientIpv6Cidr` context support, created separate IPv6 IP sets when the value is present, and changed both WAF allowlist rules to allow requests that match either the IPv4 or IPv6 client CIDR.
 - Tests or verification performed: Ran `npm.cmd run build` and `npx.cmd cdk synth`. Both completed successfully.
+
+### 2026-09-08 - Chat backend Glue permission and Knowledge Base ingestion
+- Goal: Fix live app failures where Athena could not query Glue `information_schema` metadata and runbook retrieval returned no relevant playbook context.
+- Files changed: `lib/frontend/constructs/lambda.ts`.
+- Key changes: Added `glue:GetDatabases` to the chat Lambda execution role policy so Athena metadata queries can enumerate Glue databases.
+- Live AWS actions performed: Started Bedrock Knowledge Base ingestion jobs for table schemas, example queries, and runbooks. Table schema ingestion indexed 5 documents, example query ingestion indexed 1 document, and runbook ingestion indexed 10 documents. Direct runbook retrieval was verified successfully with the Bedrock Agent Runtime API.
+- Tests or verification performed: Ran `npm.cmd run build` and `npx.cmd cdk synth FrontendAppStack`. Both completed successfully.

@@ -23,6 +23,8 @@ yarn-error.log*
 dist/
 build/
 **/build/
+*.js
+*.d.ts
 
 # Environment variables
 .env
